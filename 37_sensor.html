@@ -52,8 +52,15 @@
                         Matrix<span class="text-indigo-600">hive</span>
                     </div>
                 </div>
-                <div class="text-sm font-semibold text-slate-500 hidden sm:block">
-                    Edu-Series Sensor Kit
+                <div class="flex items-center gap-4">
+                    <div class="text-sm font-semibold text-slate-500 hidden sm:block">
+                        Edu-Series Sensor Kit
+                    </div>
+                    <!-- Redirect Button to Main Website -->
+                    <a href="https://matrixhive.tech/learning" target="_blank" rel="noopener noreferrer" class="bg-indigo-600 hover:bg-indigo-700 text-white text-sm font-semibold py-2 px-4 rounded-lg transition shadow-sm flex items-center gap-2">
+                        <span>Explore More Kits</span>
+                        <i class="fas fa-external-link-alt text-xs"></i>
+                    </a>
                 </div>
             </div>
         </div>
@@ -547,56 +554,62 @@
         // Programmatically generate image placeholders. Replace these dynamically generated URLs 
         // with actual image paths when you host your code.
         
-        const imageFolder = "37-in-1_components image/";
+        const imageFolder = "components_image/";
 
         // Mapping your exact local filenames to the correct sensor IDs
         const imageMap = {
-            1: "PS2 Game Joystick Module.jpg",
-            2: "1 Channel Relay 5V.jpg",
-            3: "Sound Sensor_Mic Module.jpg",
-            4: "Small Microphone Sound Sensor Module.jpg",
-            5: "TCRT5000 Tracking Sensor Module.jpg",
-            6: "IR Obstacle_Proximity Sensor.jpg",
-            7: "Flame Sensor Module.jpg",
-            8: "Linear Magnetic Hall Sensor Module.jpg",
-            9: "Digital Temperature Module (DS18B20 type).jpg",
-            10: "Active Buzzer Module.jpg",
-            11: "Passive Buzzer Module.jpg",
-            12: "RGB 3‑Color LED Module.webp",
-            13: "SMD 3‑Color LED Module.jpg",
-            14: "5 mm Two‑Color LED Module.jpg",
-            15: "3 mm Two‑Color LED Module.jpg",
-            16: "Dry Reed Pipe Module (full module version).jpg",
-            17: "Mini Dry Reed Pipe Module.jpg",
-            18: "Finger Detecting Heartbeat Module.webp",
-            19: "7‑Color Flashing LED Module.jpg",
-            20: "Laser Module.jpg",
-            21: "Tactile Switch Module.jpg",
-            22: "Vibration Switch Module (SW‑420 type).jpg",
-            23: "Rotary Encoder Module.jpg",
-            24: "Magic Cup Light Module.jpg",
-            25: "Mercury Medallion_Mercury Tilt Switch Module.jpg",
-            26: "Tilt Switch Module (ball_tilt type).jpg",
-            27: "Photosensitive Resistor Sensor Module (LDR board).jpg",
-            28: "DHT11 Temperature & Humidity Module.webp",
-            29: "Hall Magnetic Sensor Module (non‑linear_generic Hall).jpg",
-            30: "DS18B20 Temperature Sensor Module.webp",
-            31: "Analog Temperature Module (LM35‑style).jpg",
-            32: "Infrared Transmit Sensor Module.jpg",
-            33: "Infrared Receiver Module.jpg",
-            // 33: IR Receiver not explicitly listed in your folder, falls back to placeholder automatically
-            34: "Knock Sensor Module.webp",
-            35: "Broken Light_Photo‑interrupter Module.jpg"
+            1: "ps2-game-joystick-module.jpg",
+            2: "1-channel-relay-5v.jpg",
+            3: "sound-sensor-mic-module.jpg",
+            4: "small-microphone-sound-sensor-module.jpg",
+            5: "tcrt5000-tracking-sensor-module.jpg",
+            6: "ir-obstacle-proximity-sensor.jpg",
+            7: "flame-sensor-module.jpg",
+            8: "linear-magnetic-hall-sensor-module.jpg",
+            9: "digital-temperature-module-ds18b20-type.jpg",
+            10: "active-buzzer-module.jpg",
+            11: "passive-buzzer-module.jpg",
+            12: "rgb-3-color-led-module.webp",
+            13: "smd-3-color-led-module.jpg",
+            14: "5mm-two-color-led-module.jpg",
+            15: "3mm-two-color-led-module.jpg",
+            16: "dry-reed-pipe-module-full-module-version.jpg",
+            17: "mini-dry-reed-pipe-module.jpg",
+            18: "finger-detecting-heartbeat-module.webp",
+            19: "7-color-flashing-led-module.jpg",
+            20: "laser-module.jpg",
+            21: "tactile-switch-module.jpg",
+            22: "vibration-switch-module-sw-420-type.jpg",
+            23: "rotary-encoder-module.jpg",
+            24: "magic-cup-light-module.jpg",
+            25: "mercury-medallion-mercury-tilt-switch-module.jpg",
+            26: "tilt-switch-module-ball-tilt-type.jpg",
+            27: "photosensitive-resistor-sensor-module-ldr-board.jpg",
+            28: "dht11-temperature-humidity-module.webp",
+            29: "hall-magnetic-sensor-module-non-linear-generic-hall.jpg",
+            30: "ds18b20-temperature-sensor-module.webp",
+            31: "analog-temperature-module-lm35-style.jpg",
+            32: "infrared-transmit-sensor-module.jpg",
+            33: "infrared-receiver-module.jpg",
+            34: "knock-sensor-module.webp",
+            35: "broken-light-photo-interrupter-module.jpg"
         };
 
         const sensorData = rawSensorData.map(sensor => {
             const shortName = encodeURIComponent(sensor.name.replace(' Module', '').replace(' Sensor', ''));
             const imageFileName = imageMap[sensor.id];
             
+            // Fix: Use encodeURI on the complete path to handle spaces in folder AND file names correctly for web servers
+            let resolvedImageUrl = `https://placehold.co/600x400/e2e8f0/475569?text=Image:+${shortName}`;
+            
+            if (imageFileName) {
+                // encodeURI safely converts spaces to %20 without breaking the slash (/) directory separator
+                resolvedImageUrl = encodeURI(imageFolder + imageFileName);
+            }
+            
             return {
                 ...sensor,
-                // Automatically constructs relative path, or uses a placeholder if mapping is missing
-                imageUrl: imageFileName ? (imageFolder + imageFileName) : `https://placehold.co/600x400/e2e8f0/475569?text=Image:+${shortName}`
+                imageUrl: resolvedImageUrl
             };
         });
 
