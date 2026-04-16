@@ -1,0 +1,784 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Matrixhive | 37-in-1 Sensor Kit Portal</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <link href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.0.0/css/all.min.css" rel="stylesheet">
+    <style>
+        @import url('https://fonts.googleapis.com/css2?family=Inter:wght@300;400;600;700&display=swap');
+        body {
+            font-family: 'Inter', sans-serif;
+            background-color: #f8fafc;
+        }
+        .glass-header {
+            background: rgba(255, 255, 255, 0.9);
+            backdrop-filter: blur(10px);
+        }
+        .sensor-card {
+            transition: all 0.3s ease;
+        }
+        .sensor-card:hover {
+            transform: translateY(-5px);
+            box-shadow: 0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04);
+        }
+        /* Custom Scrollbar for Modal */
+        .modal-scroll::-webkit-scrollbar {
+            width: 8px;
+        }
+        .modal-scroll::-webkit-scrollbar-track {
+            background: #f1f1f1; 
+            border-radius: 4px;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb {
+            background: #cbd5e1; 
+            border-radius: 4px;
+        }
+        .modal-scroll::-webkit-scrollbar-thumb:hover {
+            background: #94a3b8; 
+        }
+    </style>
+</head>
+<body class="text-slate-800 antialiased">
+
+    <!-- Header -->
+    <header class="glass-header fixed w-full top-0 z-40 border-b border-slate-200 shadow-sm">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div class="flex justify-between items-center h-16">
+                <div class="flex items-center gap-3">
+                    <!-- Matrixhive Text Logo -->
+                    <div class="text-2xl font-bold text-slate-900 tracking-tight">
+                        Matrix<span class="text-indigo-600">hive</span>
+                    </div>
+                </div>
+                <div class="text-sm font-semibold text-slate-500 hidden sm:block">
+                    Edu-Series Sensor Kit
+                </div>
+            </div>
+        </div>
+    </header>
+
+    <!-- Hero Section -->
+    <main class="pt-24 pb-12">
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8 text-center">
+            <h1 class="text-4xl sm:text-5xl font-extrabold text-slate-900 mb-4 tracking-tight">
+                Unlock Your Inner <span class="text-transparent bg-clip-text bg-gradient-to-r from-indigo-600 to-purple-600">Innovator</span>
+            </h1>
+            <p class="text-lg text-slate-600 max-w-2xl mx-auto mb-8">
+                Welcome to the official Matrixhive Learning Portal for the 37-in-1 Sensor Kit. Click on any module below to learn how it works, how to wire it up to an Arduino or ESP32, and discover a cool project you can build today!
+            </p>
+
+            <!-- Search Bar -->
+            <div class="max-w-xl mx-auto relative mb-12">
+                <div class="absolute inset-y-0 left-0 pl-4 flex items-center pointer-events-none">
+                    <i class="fas fa-search text-slate-400"></i>
+                </div>
+                <input type="text" id="searchInput" 
+                    class="block w-full pl-11 pr-4 py-3 sm:text-lg border border-slate-300 rounded-full shadow-sm focus:ring-indigo-500 focus:border-indigo-500 bg-white placeholder-slate-400 transition" 
+                    placeholder="Search for a sensor (e.g., 'Relay', 'Temperature')...">
+            </div>
+        </div>
+
+        <!-- Sensor Grid -->
+        <div class="max-w-7xl mx-auto px-4 sm:px-6 lg:px-8">
+            <div id="sensorGrid" class="grid grid-cols-1 sm:grid-cols-2 lg:grid-cols-3 xl:grid-cols-4 gap-6">
+                <!-- Cards will be injected here via JavaScript -->
+            </div>
+            
+            <div id="noResults" class="hidden text-center py-12">
+                <i class="fas fa-robot text-6xl text-slate-300 mb-4"></i>
+                <h3 class="text-xl font-medium text-slate-600">No sensors found matching your search.</h3>
+                <p class="text-slate-500 mt-2">Try a different keyword.</p>
+            </div>
+        </div>
+    </main>
+
+    <!-- Footer -->
+    <footer class="bg-slate-900 py-8 text-center text-slate-400">
+        <p>© 2026 Matrixhive.tech - Fueling Future Careers.</p>
+    </footer>
+
+    <!-- Modal for Sensor Details -->
+    <div id="sensorModal" class="fixed inset-0 z-50 hidden" aria-labelledby="modal-title" role="dialog" aria-modal="true">
+        <!-- Background overlay -->
+        <div class="fixed inset-0 bg-slate-900 bg-opacity-75 transition-opacity backdrop-blur-sm" id="modalOverlay"></div>
+
+        <div class="fixed inset-0 z-10 overflow-y-auto">
+            <div class="flex min-h-full items-end justify-center p-4 text-center sm:items-center sm:p-0">
+                <!-- Modal panel -->
+                <div class="relative transform overflow-hidden rounded-2xl bg-white text-left shadow-2xl transition-all sm:my-8 sm:w-full sm:max-w-3xl">
+                    
+                    <!-- Close button -->
+                    <button type="button" id="closeModalBtn" class="absolute top-4 right-4 text-slate-400 hover:text-slate-600 bg-white hover:bg-slate-100 rounded-full p-2 transition z-10 shadow-sm border border-slate-200">
+                        <i class="fas fa-times w-5 h-5 flex items-center justify-center"></i>
+                    </button>
+
+                    <div class="bg-white modal-scroll max-h-[85vh] overflow-y-auto">
+                        
+                        <!-- Sensor Image Header -->
+                        <div class="w-full h-64 bg-slate-100 relative">
+                            <img id="modalImage" src="" alt="Sensor Image" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/e2e8f0/475569?text=Image+Not+Found'">
+                            <div class="absolute bottom-4 left-6 bg-white/90 backdrop-blur-sm px-4 py-2 rounded-xl shadow-md flex items-center gap-3">
+                                <div class="text-indigo-600 text-xl" id="modalIcon">
+                                    <i class="fas fa-microchip"></i>
+                                </div>
+                                <h3 class="text-xl font-bold leading-6 text-slate-900" id="modalTitle">Sensor Name</h3>
+                            </div>
+                        </div>
+
+                        <div class="px-6 py-6 sm:px-8">
+                            
+                            <!-- Description -->
+                            <div class="bg-slate-50 p-4 rounded-xl border border-slate-100">
+                                <h4 class="font-semibold text-slate-700 flex items-center gap-2 mb-2"><i class="fas fa-info-circle text-indigo-500"></i> What does it do?</h4>
+                                <p class="text-sm text-slate-600" id="modalDesc">Description goes here.</p>
+                            </div>
+
+                            <!-- Wiring & Circuit Section -->
+                            <div class="mt-8">
+                                <h4 class="text-xl font-bold text-slate-800 border-b pb-2 mb-6 flex items-center gap-2">
+                                    <i class="fas fa-project-diagram text-slate-400"></i> Wiring & Circuit
+                                </h4>
+                                
+                                <!-- Simulated Pinout Diagram Container -->
+                                <div class="mb-6 rounded-xl overflow-hidden border border-slate-200 shadow-sm bg-slate-50">
+                                    <div class="px-4 py-2 text-xs font-semibold text-slate-500 border-b border-slate-200 uppercase tracking-wider bg-white">Module Pinout Diagram</div>
+                                    <div id="modalPinout" class="p-4 sm:p-6 bg-slate-50 flex justify-center">
+                                        <!-- Dynamic PCB will be injected here -->
+                                    </div>
+                                </div>
+
+                                <div class="grid grid-cols-1 sm:grid-cols-2 gap-4">
+                                    <!-- Arduino Box -->
+                                    <div class="bg-blue-50 border border-blue-200 rounded-xl p-4">
+                                        <div class="flex items-center gap-2 font-bold text-blue-800 mb-2">
+                                            <i class="fas fa-microchip"></i> Arduino Uno
+                                        </div>
+                                        <ul class="text-sm text-blue-900 space-y-1 font-mono" id="modalArduino">
+                                            <!-- Arduino pins injected here -->
+                                        </ul>
+                                    </div>
+                                    <!-- ESP32 Box -->
+                                    <div class="bg-purple-50 border border-purple-200 rounded-xl p-4">
+                                        <div class="flex items-center gap-2 font-bold text-purple-800 mb-2">
+                                            <i class="fas fa-wifi"></i> ESP32
+                                        </div>
+                                        <ul class="text-sm text-purple-900 space-y-1 font-mono" id="modalESP">
+                                            <!-- ESP pins injected here -->
+                                        </ul>
+                                    </div>
+                                </div>
+                                <p class="text-xs text-slate-500 mt-3 italic">*Note: Pin numbers (like D2, D3 for Arduino or 15, 23 for ESP32) can often be changed in your code if needed!</p>
+                            </div>
+
+                            <!-- Step-by-Step & Code Section -->
+                            <div class="mt-8">
+                                <h4 class="text-xl font-bold text-slate-800 border-b pb-2 mb-4 flex items-center gap-2">
+                                    <i class="fas fa-list-ol text-slate-400"></i> Step-by-Step Setup
+                                </h4>
+                                <ol class="list-decimal list-inside text-sm text-slate-600 space-y-2 mb-6 ml-2">
+                                    <li><strong>Wire it up:</strong> Connect the sensor to your Arduino or ESP32 using the pinout guide above.</li>
+                                    <li><strong>Connect to PC:</strong> Plug your board into your computer via a USB cable.</li>
+                                    <li><strong>Open IDE:</strong> Open the Arduino IDE software and select your specific board & COM port from the Tools menu.</li>
+                                    <li><strong>Upload Code:</strong> Copy the basic configuration code below, paste it into your IDE, and click Upload.</li>
+                                    <li><strong>Test:</strong> Open the Serial Monitor (set to 9600 baud rate) to view your sensor data!</li>
+                                </ol>
+
+                                <!-- Code Block -->
+                                <div class="bg-slate-900 rounded-xl overflow-hidden shadow-md">
+                                    <div class="flex justify-between items-center px-4 py-2 bg-slate-800 border-b border-slate-700">
+                                        <span class="text-xs font-mono text-slate-300">Basic Config Code (C++)</span>
+                                        <button id="copyBtn" onclick="copyCode()" class="text-xs text-indigo-400 hover:text-indigo-300 transition flex items-center gap-1 font-semibold">
+                                            <i class="fas fa-copy"></i> Copy
+                                        </button>
+                                    </div>
+                                    <div class="p-4 overflow-x-auto modal-scroll">
+                                        <pre><code id="modalCode" class="text-sm font-mono text-emerald-400 whitespace-pre">
+// Code will load here
+                                        </code></pre>
+                                    </div>
+                                </div>
+                            </div>
+
+                            <!-- Project Idea Section -->
+                            <div class="mt-8 bg-gradient-to-br from-indigo-600 to-purple-600 p-6 rounded-xl text-white shadow-md relative overflow-hidden">
+                                <!-- Background decoration -->
+                                <i class="fas fa-lightbulb absolute -right-6 -bottom-6 text-8xl opacity-10"></i>
+                                
+                                <h4 class="font-bold text-xl flex items-center gap-2 mb-3 relative z-10"><i class="fas fa-lightbulb text-yellow-300"></i> Project Idea</h4>
+                                <p class="text-sm text-indigo-50 leading-relaxed relative z-10 text-lg" id="modalProject">Project idea goes here.</p>
+                            </div>
+                        </div>
+                    </div>
+                    
+                    <div class="bg-slate-50 px-4 py-4 sm:flex sm:flex-row-reverse sm:px-6 border-t border-slate-200">
+                        <button type="button" id="closeModalBtn2" class="mt-3 inline-flex w-full justify-center rounded-lg bg-indigo-600 px-6 py-2.5 text-sm font-semibold text-white shadow-sm hover:bg-indigo-500 sm:mt-0 sm:w-auto transition">Got it! Let's Build</button>
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Data and Logic -->
+    <script>
+        // Database of all 37 kit components
+        // DEVELOPER NOTE: To use real images, simply replace the 'imageUrl' and 'circuitUrl' values below 
+        // with the path to your actual images (e.g. imageUrl: "./images/joystick.jpg")
+        
+        const rawSensorData = [
+            {
+                id: 1,
+                name: "PS2 Game JoyStick Module",
+                icon: "fa-gamepad",
+                desc: "Just like the joystick on a PlayStation controller! It measures movement in two directions (X and Y axis) and has a built-in button when you press down on it.",
+                arduino: ["VCC → 5V", "GND → GND", "VRx → A0 (Analog)", "VRy → A1 (Analog)", "SW → D2 (Digital)"],
+                esp32: ["VCC → 3.3V", "GND → GND", "VRx → 34 (Analog)", "VRy → 35 (Analog)", "SW → 32 (Digital)"],
+                project: "Robot Remote Control: Use the joystick to control the speed and direction of a 2-wheel robot car. Push forward to go forward, press the button to honk a buzzer!"
+            },
+            {
+                id: 2,
+                name: "1 Channel Relay 5V",
+                icon: "fa-toggle-on",
+                desc: "An electronic bridge. It allows a tiny signal from your Arduino/ESP32 to safely turn on/off high-power devices, like a standard home lightbulb or a water pump.",
+                arduino: ["VCC → 5V", "GND → GND", "IN → D3"],
+                esp32: ["VCC → 5V (from Vin)", "GND → GND", "IN → 23"],
+                project: "Smart Plant Waterer: Connect a small water pump to the relay. When soil gets dry, your microcontroller tells the relay to switch the pump on for 5 seconds."
+            },
+            {
+                id: 3,
+                name: "Sound Sensor Module",
+                icon: "fa-volume-up",
+                desc: "Contains a microphone that detects ambient sound levels. It can output a digital signal when sound crosses a certain threshold (adjusted via the small screw on the blue box).",
+                arduino: ["VCC → 5V", "GND → GND", "OUT → D4"],
+                esp32: ["VCC → 3.3V", "GND → GND", "OUT → 33"],
+                project: "Clap-On Light: Write code that listens for a sudden loud noise (like a clap). When detected, toggle a relay to turn your desk lamp on or off."
+            },
+            {
+                id: 4,
+                name: "Small Microphone Sound Sensor",
+                icon: "fa-microphone",
+                desc: "Similar to the big sound sensor, but smaller and more sensitive. Great for detecting general noise levels rather than specific loud spikes.",
+                arduino: ["VCC → 5V", "GND → GND", "OUT → A2 (Analog)"],
+                esp32: ["VCC → 3.3V", "GND → GND", "OUT → 32 (Analog)"],
+                project: "Library Noise Monitor: Read the analog value of the room's noise. If it goes above a certain level, light up a red LED warning people to stay quiet."
+            },
+            {
+                id: 5,
+                name: "TCRT5000 Tracking Module",
+                icon: "fa-route",
+                desc: "Uses infrared light to detect black and white colors. It shines an invisible light and measures how much bounces back. White reflects, black absorbs.",
+                arduino: ["VCC → 5V", "GND → GND", "OUT → D5"],
+                esp32: ["VCC → 3.3V", "GND → GND", "OUT → 25"],
+                project: "Line Following Robot: Put two of these on the front of a robot chassis. When the sensor sees the black tape line, it tells the motors to turn to stay on track."
+            },
+            {
+                id: 6,
+                name: "IR Obstacle Avoidance Sensor",
+                icon: "fa-car-crash",
+                desc: "Sends out an infrared beam. If an object is in front of it, the beam bounces back to the receiver. You can adjust the detection distance using the onboard potentiometers.",
+                arduino: ["VCC → 5V", "GND → GND", "OUT → D6"],
+                esp32: ["VCC → 3.3V", "GND → GND", "OUT → 26"],
+                project: "Touchless Trash Can: Mount this near the lid of a bin. When you wave your hand in front of it, a servo motor automatically opens the lid for you."
+            },
+            {
+                id: 7,
+                name: "Flame Sensor Module",
+                icon: "fa-fire",
+                desc: "Detects infrared light specifically in the wavelength that fires produce. It acts as an electronic eye looking specifically for flames.",
+                arduino: ["VCC → 5V", "GND → GND", "D0 → D7 (Digital)"],
+                esp32: ["VCC → 3.3V", "GND → GND", "D0 → 27 (Digital)"],
+                project: "Fire Alarm System: Build a safety system. If a flame is detected, activate an Active Buzzer to sound a loud alarm and send a WiFi alert via the ESP32."
+            },
+            {
+                id: 8,
+                name: "Linear Magnetic Hall Sensor",
+                icon: "fa-magnet",
+                desc: "Detects the presence and strength of a magnetic field. Unlike simple switches, it gives you a variable (analog) reading based on how close the magnet is.",
+                arduino: ["VCC → 5V", "GND → GND", "AO → A3 (Analog)"],
+                esp32: ["VCC → 3.3V", "GND → GND", "AO → 34 (Analog)"],
+                project: "DIY Door Security: Place a magnet on a door and this sensor on the frame. If the door opens slightly, the magnetic field drops, and you can trigger an alarm."
+            },
+            {
+                id: 9,
+                name: "Digital Temperature Module",
+                icon: "fa-thermometer-half",
+                desc: "A basic thermistor module that gives a digital output when the temperature reaches a specific threshold that you set with the onboard screw.",
+                arduino: ["VCC → 5V", "GND → GND", "DO → D8"],
+                esp32: ["VCC → 3.3V", "GND → GND", "DO → 14"],
+                project: "PC Cooling Fan Controller: Stick this near a warm computer component. When it gets too hot, the sensor triggers, telling your code to turn on a cooling fan via a relay."
+            },
+            {
+                id: 10,
+                name: "Active Buzzer Module",
+                icon: "fa-bell",
+                desc: "The simplest way to make noise. Give it power, and it emits a loud, single-tone beep immediately. No complex coding required.",
+                arduino: ["VCC → 5V", "GND → GND", "I/O → D9"],
+                esp32: ["VCC → 3.3V", "GND → GND", "I/O → 12"],
+                project: "Microwave Timer Beep: Connect it to a countdown timer. When the timer hits zero, turn the pin HIGH for 1 second, LOW for 1 second, repeating 3 times."
+            },
+            {
+                id: 11,
+                name: "Passive Buzzer Module",
+                icon: "fa-music",
+                desc: "Unlike the active buzzer, this one needs a varying signal (PWM) to make sound. This allows you to play different musical notes and melodies!",
+                arduino: ["VCC → 5V", "GND → GND", "I/O → D10 (PWM pin)"],
+                esp32: ["VCC → 3.3V", "GND → GND", "I/O → 13 (PWM pin)"],
+                project: "Mario Theme Player: Use the `tone()` function in Arduino to program frequencies matching musical notes, playing your favorite video game theme song."
+            },
+            {
+                id: 12,
+                name: "DIP 3 Color LED (RGB)",
+                icon: "fa-palette",
+                desc: "A single bulb that contains Red, Green, and Blue lights inside. By mixing the brightness of these three colors using PWM, you can create almost any color imaginable.",
+                arduino: ["R → D9, G → D10, B → D11", "GND → GND (for Common Cathode)"],
+                esp32: ["R → 12, G → 13, B → 14", "GND → GND"],
+                project: "Mood Lamp: Read temperature data. If cold, make the LED glow blue. If room temperature, green. If hot, red. Blend the colors smoothly in between!"
+            },
+            {
+                id: 13,
+                name: "SMD 3 Color LED Module",
+                icon: "fa-lightbulb",
+                desc: "Exactly the same functionally as the DIP RGB LED, but using a flat, surface-mount device (SMD) component instead of a traditional bulb shape.",
+                arduino: ["R → D9, G → D10, B → D11", "GND → GND"],
+                esp32: ["R → 12, G → 13, B → 14", "GND → GND"],
+                project: "Web-Controlled Color Picker: Host a small webpage on your ESP32 with a color wheel. Clicking a color sends a signal to change the LED to match!"
+            },
+            {
+                id: 14,
+                name: "5mm Two-Color LED Module",
+                icon: "fa-traffic-light",
+                desc: "Contains a Red and a Green LED inside a standard 5mm bulb. You can turn them on individually or mix them to create Yellow/Orange.",
+                arduino: ["Pin S (Red) → D5", "Middle (Green) → D6", "- (GND) → GND"],
+                esp32: ["Pin S (Red) → 16", "Middle (Green) → 17", "- (GND) → GND"],
+                project: "Machine Status Light: Use this on a 3D printer or robot. Green means 'Ready', Red means 'Error', and rapidly flashing Red/Green means 'Processing'."
+            },
+            {
+                id: 15,
+                name: "3mm Two-Color LED Module",
+                icon: "fa-adjust",
+                desc: "A smaller, 3mm version of the two-color LED. Great for compact control panels where space is limited.",
+                arduino: ["Pin S → D5", "Middle → D6", "- (GND) → GND"],
+                esp32: ["Pin S → 16", "Middle → 17", "- (GND) → GND"],
+                project: "Battery Indicator: If your battery voltage reading is above 70%, turn it Green. If it drops below 30%, turn it Red to warn the user."
+            },
+            {
+                id: 16,
+                name: "Dry Reed Pipe Module",
+                icon: "fa-door-open",
+                desc: "Contains two tiny metal contacts inside a glass tube. When a magnet gets close, it pulls the contacts together, completing the circuit. A magnetic switch!",
+                arduino: ["VCC → 5V", "GND → GND", "DO → D2"],
+                esp32: ["VCC → 3.3V", "GND → GND", "DO → 15"],
+                project: "Secret Drawer Alarm: Hide the magnet in the drawer and the sensor on the desk. Opening the drawer breaks the magnetic connection, triggering a buzzer."
+            },
+            {
+                id: 17,
+                name: "Mini Dry Reed Pipe",
+                icon: "fa-magnet",
+                desc: "A smaller version of the magnetic reed switch. Ideal for tighter spaces or smaller projects requiring magnetic detection.",
+                arduino: ["VCC → 5V", "GND → GND", "DO → D2"],
+                esp32: ["VCC → 3.3V", "GND → GND", "DO → 15"],
+                project: "Bicycle Speedometer: Attach a magnet to a bike wheel spoke and the sensor to the frame. Count how many times the switch closes per second to calculate speed."
+            },
+            {
+                id: 18,
+                name: "Finger Detecting Heartbeat Module",
+                icon: "fa-heartbeat",
+                desc: "Uses an infrared LED and a light detector to measure the tiny changes in light as blood pumps through your finger, detecting your pulse.",
+                arduino: ["VCC → 5V", "GND → GND", "OUT → A0 (Analog)"],
+                esp32: ["VCC → 3.3V", "GND → GND", "OUT → 34 (Analog)"],
+                project: "Lie Detector/Stress Tester: Monitor someone's heart rate while asking questions. If their heart rate spikes suddenly, light up a red LED!"
+            },
+            {
+                id: 19,
+                name: "7 Color Flashing LED Module",
+                icon: "fa-star",
+                desc: "An auto-flashing LED. You just give it power, and an internal chip cycles through 7 different colors automatically. No coding needed for the color change!",
+                arduino: ["S (Signal/VCC) → 5V or D8", "- (GND) → GND"],
+                esp32: ["S (Signal/VCC) → 3.3V or 16", "- (GND) → GND"],
+                project: "Party Decoration: Hook this up to a digital pin. Write code so that when the room gets dark (using a photoresistor), the Arduino turns this pin ON to start the light show."
+            },
+            {
+                id: 20,
+                name: "Laser Module",
+                icon: "fa-location-arrow",
+                desc: "Emits a concentrated beam of red light (like a laser pointer). Can be used for targeting, trips wires, or optical communication.",
+                arduino: ["S → D7", "Middle (5V) → 5V", "- (GND) → GND"],
+                esp32: ["S → 18", "Middle (3.3V/5V) → 3.3V", "- (GND) → GND"],
+                project: "Laser Tripwire: Shine the laser across a hallway hitting an LDR (light sensor). If someone walks through and breaks the beam, sound an alarm."
+            },
+            {
+                id: 21,
+                name: "Tactile Switch Module",
+                icon: "fa-hand-pointer",
+                desc: "A standard push-button mounted on a board with pull-up/pull-down resistors included, making it very reliable for detecting physical presses.",
+                arduino: ["S (Signal) → D2", "Middle (VCC) → 5V", "- (GND) → GND"],
+                esp32: ["S (Signal) → 4", "Middle (VCC) → 3.3V", "- (GND) → GND"],
+                project: "Reaction Time Game: An LED turns on randomly. You have to press the button as fast as possible. The LCD screen displays your reaction time in milliseconds."
+            },
+            {
+                id: 22,
+                name: "Vibration Switch Module",
+                icon: "fa-wave-square",
+                desc: "Contains a tiny spring or ball inside. When it gets bumped, knocked, or vibrates, the spring touches the walls and completes the circuit briefly.",
+                arduino: ["VCC → 5V", "GND → GND", "DO → D3"],
+                esp32: ["VCC → 3.3V", "GND → GND", "DO → 5"],
+                project: "Earthquake/Theft Detector: Attach this to a valuable item or a sturdy table. If it senses heavy vibration, log the time to an SD card or send a WiFi alert."
+            },
+            {
+                id: 23,
+                name: "Blue Rotary Encoder Module",
+                icon: "fa-sync-alt",
+                desc: "A knob that spins infinitely in either direction (unlike a potentiometer which stops). It tells you which direction it's turning and also acts as a push button.",
+                arduino: ["CLK → D2, DT → D3, SW → D4", "VCC → 5V, GND → GND"],
+                esp32: ["CLK → 25, DT → 26, SW → 27", "VCC → 3.3V, GND → GND"],
+                project: "Digital Menu Navigation: Use the knob to scroll through a menu on an OLED screen. Turn to scroll, press the knob in to 'select' an option."
+            },
+            {
+                id: 24,
+                name: "Magic Cup Light Module (Set of 2)",
+                icon: "fa-glass-cheers",
+                desc: "A fun paired module set. They contain a tilt switch and an LED. When you tilt one module, its LED dims while the other module's LED brightens, like pouring magic light from one cup to another.",
+                arduino: ["Module 1: S(Tilt)→D2, L(LED)→D9", "Module 2: S(Tilt)→D3, L(LED)→D10"],
+                esp32: ["Module 1: S→15, L→12", "Module 2: S→4, L→13"],
+                project: "Digital Hourglass: Write a program that uses PWM to smoothly fade the LEDs in opposite directions when you tip the breadboard, simulating pouring sand."
+            },
+            {
+                id: 25,
+                name: "Mercury Medallion Module",
+                icon: "fa-level-down-alt",
+                desc: "A highly sensitive tilt switch using a tiny droplet of mercury inside a glass bulb. When tilted, the mercury rolls and bridges two contacts.",
+                arduino: ["S → D4", "Middle → 5V", "- → GND"],
+                esp32: ["S → 16", "Middle → 3.3V", "- → GND"],
+                project: "Posture Corrector: Attach it to the back of a chair or a shirt collar. If you slouch (tilting the sensor), a gentle buzzer reminds you to sit up straight."
+            },
+            {
+                id: 26,
+                name: "Tilt Switch Module",
+                icon: "fa-arrows-alt-v",
+                desc: "Safer than mercury, this uses a tiny metal ball inside a cylinder. When tilted upright, the ball rolls onto the pins, completing the circuit.",
+                arduino: ["S → D5", "Middle → 5V", "- → GND"],
+                esp32: ["S → 17", "Middle → 3.3V", "- → GND"],
+                project: "Magic 8-Ball Toy: Build an electronic 8-Ball. When you shake it (activating the tilt switch), an LCD screen displays a random fortune."
+            },
+            {
+                id: 27,
+                name: "Photosensitive Resistor (LDR)",
+                icon: "fa-sun",
+                desc: "A Light Dependent Resistor. The brighter the light hitting it, the lower its electrical resistance. It's an analog eye that measures light intensity.",
+                arduino: ["VCC → 5V", "GND → GND", "AO → A1 (Analog)"],
+                esp32: ["VCC → 3.3V", "GND → GND", "AO → 35 (Analog)"],
+                project: "Automatic Streetlights: Measure ambient light. When the sun goes down and the room gets dark, automatically turn on a relay to power an outdoor light."
+            },
+            {
+                id: 28,
+                name: "DHT11 Temp & Humidity Sensor",
+                icon: "fa-cloud-sun",
+                desc: "A very popular digital sensor that reads both the temperature and the moisture in the air (humidity) and sends it as a digital data packet.",
+                arduino: ["VCC → 5V", "GND → GND", "DATA → D2"],
+                esp32: ["VCC → 3.3V", "GND → GND", "DATA → 4"],
+                project: "Smart Weather Station: Read temperature and humidity. Display it on an LCD, and use an ESP32 to upload the weather data to an online dashboard!"
+            },
+            {
+                id: 29,
+                name: "Hall Magnetic Sensor",
+                icon: "fa-magnet",
+                desc: "Similar to the linear hall sensor, but usually acts purely as a digital switch. When a magnet is close enough, it snaps ON. Remove the magnet, it snaps OFF.",
+                arduino: ["VCC → 5V", "GND → GND", "DO → D3"],
+                esp32: ["VCC → 3.3V", "GND → GND", "DO → 5"],
+                project: "RPM Counter: Glue a small magnet to a spinning motor shaft. Place the sensor nearby. Count the 'blips' per minute to calculate the motor's RPM."
+            },
+            {
+                id: 30,
+                name: "DS18B20 Temperature Sensor",
+                icon: "fa-temperature-high",
+                desc: "A highly accurate digital temperature sensor that uses a '1-Wire' bus. This means you can connect 10 of these sensors using just ONE data pin on your Arduino!",
+                arduino: ["VCC → 5V", "GND → GND", "DQ (Data) → D4"],
+                esp32: ["VCC → 3.3V", "GND → GND", "DQ (Data) → 18"],
+                project: "Aquarium Monitor: Use a waterproof version of this chip to monitor fish tank water. If it gets too cold, turn on a water heater."
+            },
+            {
+                id: 31,
+                name: "Analog Temperature Module",
+                icon: "fa-thermometer",
+                desc: "A basic NTC thermistor. Its resistance changes smoothly with temperature, giving you an analog voltage you can map to Celsius or Fahrenheit in code.",
+                arduino: ["S (Signal) → A0", "Middle (VCC) → 5V", "- (GND) → GND"],
+                esp32: ["S (Signal) → 34", "Middle (VCC) → 3.3V", "- (GND) → GND"],
+                project: "Digital Thermometer: Read the analog value, do a quick math conversion in your code, and print the exact room temperature to the Serial Monitor."
+            },
+            {
+                id: 32,
+                name: "Infrared Transmit Sensor",
+                icon: "fa-broadcast-tower",
+                desc: "An LED that shines invisible Infrared (IR) light. It works exactly like the bulb on the front of your TV remote control.",
+                arduino: ["S → D3 (often requires PWM)", "Middle → 5V", "- → GND"],
+                esp32: ["S → 4", "Middle → 3.3V", "- → GND"],
+                project: "Universal Remote: Record the IR codes from your actual TV remote, then program your Arduino to blast those codes to turn your TV on and off automatically."
+            },
+            {
+                id: 33,
+                name: "Infrared Receiver Module",
+                icon: "fa-satellite-dish",
+                desc: "The 'eye' that sees infrared signals. It can decode the blinking invisible light from an IR transmitter (like a TV remote) into usable digital data.",
+                arduino: ["S → D11", "Middle → 5V", "- → GND"],
+                esp32: ["S → 15", "Middle → 3.3V", "- → GND"],
+                project: "Remote Control Robot: Build a car and use your living room TV remote to drive it! Pressing 'Volume Up' makes it go forward, 'Channel Up' turns left."
+            },
+            {
+                id: 34,
+                name: "The Knock Sensor Module",
+                icon: "fa-hand-rock",
+                desc: "Contains a piezo element or spring that detects physical shocks or taps. Similar to vibration, but tuned for short, sharp impacts.",
+                arduino: ["S → D2", "Middle → 5V", "- → GND"],
+                esp32: ["S → 16", "Middle → 3.3V", "- → GND"],
+                project: "Secret Knock Door Lock: Program the Arduino to listen for a specific rhythm (e.g., 'Shave and a Haircut'). If the rhythm matches, activate a servo to unlock the door!"
+            },
+            {
+                id: 35,
+                name: "Broken Light Module (Photo-interrupter)",
+                icon: "fa-cut",
+                desc: "Has a U-shape. An invisible beam shoots across the gap. If you slide a piece of paper or cardboard into the slot, it breaks the beam and triggers the sensor.",
+                arduino: ["VCC → 5V", "GND → GND", "OUT → D3"],
+                esp32: ["VCC → 3.3V", "GND → GND", "OUT → 5"],
+                project: "Coin Counter: Attach this to the bottom of a coin slot. Every time a coin drops through and breaks the beam, add $1 to the digital piggy bank total on your LCD."
+            }
+        ];
+
+        // Programmatically generate image placeholders. Replace these dynamically generated URLs 
+        // with actual image paths when you host your code.
+        
+        const imageFolder = "37-in-1_components image/";
+
+        // Mapping your exact local filenames to the correct sensor IDs
+        const imageMap = {
+            1: "PS2 Game Joystick Module.jpg",
+            2: "1 Channel Relay 5V.jpg",
+            3: "Sound Sensor_Mic Module.jpg",
+            4: "Small Microphone Sound Sensor Module.jpg",
+            5: "TCRT5000 Tracking Sensor Module.jpg",
+            6: "IR Obstacle_Proximity Sensor.jpg",
+            7: "Flame Sensor Module.jpg",
+            8: "Linear Magnetic Hall Sensor Module.jpg",
+            9: "Digital Temperature Module (DS18B20 type).jpg",
+            10: "Active Buzzer Module.jpg",
+            11: "Passive Buzzer Module.jpg",
+            12: "RGB 3‑Color LED Module.webp",
+            13: "SMD 3‑Color LED Module.jpg",
+            14: "5 mm Two‑Color LED Module.jpg",
+            15: "3 mm Two‑Color LED Module.jpg",
+            16: "Dry Reed Pipe Module (full module version).jpg",
+            17: "Mini Dry Reed Pipe Module.jpg",
+            18: "Finger Detecting Heartbeat Module.webp",
+            19: "7‑Color Flashing LED Module.jpg",
+            20: "Laser Module.jpg",
+            21: "Tactile Switch Module.jpg",
+            22: "Vibration Switch Module (SW‑420 type).jpg",
+            23: "Rotary Encoder Module.jpg",
+            24: "Magic Cup Light Module.jpg",
+            25: "Mercury Medallion_Mercury Tilt Switch Module.jpg",
+            26: "Tilt Switch Module (ball_tilt type).jpg",
+            27: "Photosensitive Resistor Sensor Module (LDR board).jpg",
+            28: "DHT11 Temperature & Humidity Module.webp",
+            29: "Hall Magnetic Sensor Module (non‑linear_generic Hall).jpg",
+            30: "DS18B20 Temperature Sensor Module.webp",
+            31: "Analog Temperature Module (LM35‑style).jpg",
+            32: "Infrared Transmit Sensor Module.jpg",
+            33: "Infrared Receiver Module.jpg",
+            // 33: IR Receiver not explicitly listed in your folder, falls back to placeholder automatically
+            34: "Knock Sensor Module.webp",
+            35: "Broken Light_Photo‑interrupter Module.jpg"
+        };
+
+        const sensorData = rawSensorData.map(sensor => {
+            const shortName = encodeURIComponent(sensor.name.replace(' Module', '').replace(' Sensor', ''));
+            const imageFileName = imageMap[sensor.id];
+            
+            return {
+                ...sensor,
+                // Automatically constructs relative path, or uses a placeholder if mapping is missing
+                imageUrl: imageFileName ? (imageFolder + imageFileName) : `https://placehold.co/600x400/e2e8f0/475569?text=Image:+${shortName}`
+            };
+        });
+
+        const grid = document.getElementById('sensorGrid');
+        const searchInput = document.getElementById('searchInput');
+        const noResults = document.getElementById('noResults');
+        
+        // Modal Elements
+        const modal = document.getElementById('sensorModal');
+        const modalOverlay = document.getElementById('modalOverlay');
+        const closeBtns = [document.getElementById('closeModalBtn'), document.getElementById('closeModalBtn2'), modalOverlay];
+        
+        // Code Generator Helper
+        function getSensorCode(id) {
+            // DHT11
+            if (id === 28) return `#include "DHT.h"\n#define DHTPIN 2 // Pin connected to DATA\n#define DHTTYPE DHT11\n\nDHT dht(DHTPIN, DHTTYPE);\n\nvoid setup() {\n  Serial.begin(9600);\n  dht.begin();\n}\n\nvoid loop() {\n  delay(2000);\n  float h = dht.readHumidity();\n  float t = dht.readTemperature();\n  Serial.print("Humidity: ");\n  Serial.print(h);\n  Serial.print("%  Temp: ");\n  Serial.print(t);\n  Serial.println("°C");\n}`;
+
+            // DS18B20
+            if (id === 30) return `#include <OneWire.h>\n#include <DallasTemperature.h>\n\n#define ONE_WIRE_BUS 4 // Pin connected to DQ\nOneWire oneWire(ONE_WIRE_BUS);\nDallasTemperature sensors(&oneWire);\n\nvoid setup() {\n  Serial.begin(9600);\n  sensors.begin();\n}\n\nvoid loop() {\n  sensors.requestTemperatures();\n  Serial.print("Temperature: ");\n  Serial.print(sensors.getTempCByIndex(0));\n  Serial.println(" °C");\n  delay(1000);\n}`;
+
+            // RGB / SMD RGB
+            if (id === 12 || id === 13) return `int redPin = 9;\nint greenPin = 10;\nint bluePin = 11;\n\nvoid setup() {\n  pinMode(redPin, OUTPUT);\n  pinMode(greenPin, OUTPUT);\n  pinMode(bluePin, OUTPUT);\n}\n\nvoid loop() {\n  setColor(255, 0, 0); // Red\n  delay(1000);\n  setColor(0, 255, 0); // Green\n  delay(1000);\n  setColor(0, 0, 255); // Blue\n  delay(1000);\n}\n\nvoid setColor(int red, int green, int blue) {\n  analogWrite(redPin, red);\n  analogWrite(greenPin, green);\n  analogWrite(bluePin, blue);\n}`;
+
+            // Joystick
+            if (id === 1) return `int vrxPin = A0;\nint vryPin = A1;\nint swPin = 2;\n\nvoid setup() {\n  Serial.begin(9600);\n  pinMode(swPin, INPUT_PULLUP);\n}\n\nvoid loop() {\n  int x = analogRead(vrxPin);\n  int y = analogRead(vryPin);\n  int sw = digitalRead(swPin);\n  \n  Serial.print("X: "); Serial.print(x);\n  Serial.print(" | Y: "); Serial.print(y);\n  Serial.print(" | Button: "); Serial.println(sw);\n  delay(200);\n}`;
+
+            // Digital Outputs (Relays, Active Buzzer, Auto LED, Laser)
+            if ([2, 10, 19, 20].includes(id)) return `int outputPin = 3; // Match your signal/IN pin\n\nvoid setup() {\n  pinMode(outputPin, OUTPUT);\n}\n\nvoid loop() {\n  digitalWrite(outputPin, HIGH); // Turn ON\n  delay(1000);\n  digitalWrite(outputPin, LOW);  // Turn OFF\n  delay(1000);\n}`;
+
+            // Passive Buzzer
+            if (id === 11) return `int buzzerPin = 10; // Must be a PWM capable pin\n\nvoid setup() {\n  pinMode(buzzerPin, OUTPUT);\n}\n\nvoid loop() {\n  tone(buzzerPin, 1000); // Play 1kHz tone\n  delay(500);\n  noTone(buzzerPin);     // Stop tone\n  delay(500);\n}`;
+
+            // Analog Inputs (LDR, Mic, Temp, Heartbeat, Linear Hall)
+            if ([4, 8, 18, 27, 31].includes(id)) return `int sensorPin = A0; // Use Analog pin\n\nvoid setup() {\n  Serial.begin(9600);\n}\n\nvoid loop() {\n  int val = analogRead(sensorPin);\n  Serial.print("Analog Sensor Value: ");\n  Serial.println(val);\n  delay(200);\n}`;
+
+            // Default: Digital Inputs (Switches, Flame, IR, Knock, Tracking, etc.)
+            return `int sensorPin = 2; // Match your digital DO/OUT pin\n\nvoid setup() {\n  Serial.begin(9600);\n  pinMode(sensorPin, INPUT);\n}\n\nvoid loop() {\n  int val = digitalRead(sensorPin);\n  if (val == HIGH) {\n    Serial.println("Sensor Triggered! (HIGH)");\n  } else {\n    Serial.println("Normal state... (LOW)");\n  }\n  delay(200);\n}`;
+        }
+
+        // Copy Code Function
+        function copyCode() {
+            const codeText = document.getElementById('modalCode').textContent;
+            const textArea = document.createElement("textarea");
+            textArea.value = codeText;
+            document.body.appendChild(textArea);
+            textArea.select();
+            document.execCommand("copy");
+            document.body.removeChild(textArea);
+            
+            // Visual feedback
+            const btn = document.getElementById('copyBtn');
+            const originalHTML = btn.innerHTML;
+            btn.innerHTML = '<i class="fas fa-check"></i> Copied!';
+            btn.classList.add('text-emerald-400');
+            btn.classList.remove('text-indigo-400');
+            
+            setTimeout(() => {
+                btn.innerHTML = originalHTML;
+                btn.classList.remove('text-emerald-400');
+                btn.classList.add('text-indigo-400');
+            }, 2000);
+        }
+
+        // Render Cards
+        function renderCards(data) {
+            grid.innerHTML = '';
+            if(data.length === 0) {
+                noResults.classList.remove('hidden');
+            } else {
+                noResults.classList.add('hidden');
+                data.forEach(sensor => {
+                    const card = document.createElement('div');
+                    card.className = 'sensor-card bg-white rounded-2xl shadow-sm border border-slate-200 overflow-hidden cursor-pointer flex flex-col h-full';
+                    card.onclick = () => openModal(sensor);
+                    
+                    card.innerHTML = `
+                        <div class="h-40 w-full bg-slate-100 overflow-hidden relative border-b border-slate-100">
+                            <img src="${sensor.imageUrl}" alt="${sensor.name}" class="w-full h-full object-cover" onerror="this.src='https://placehold.co/600x400/e2e8f0/475569?text=Image+Not+Found'">
+                            <div class="absolute top-3 right-3 bg-white/90 backdrop-blur-sm rounded-lg p-2 text-indigo-600 shadow-sm leading-none">
+                                <i class="fas ${sensor.icon}"></i>
+                            </div>
+                        </div>
+                        <div class="p-5 flex-grow">
+                            <h3 class="text-lg font-bold text-slate-900 leading-tight mb-2">${sensor.name}</h3>
+                            <p class="text-sm text-slate-500 line-clamp-2">${sensor.desc}</p>
+                        </div>
+                        <div class="px-5 py-3 bg-slate-50 border-t border-slate-100 mt-auto flex justify-between items-center text-sm font-semibold text-indigo-600 hover:text-indigo-800 transition">
+                            View Guide & Circuit <i class="fas fa-arrow-right"></i>
+                        </div>
+                    `;
+                    grid.appendChild(card);
+                });
+            }
+        }
+
+        // Search Functionality
+        searchInput.addEventListener('input', (e) => {
+            const term = e.target.value.toLowerCase();
+            const filtered = sensorData.filter(sensor => 
+                sensor.name.toLowerCase().includes(term) || 
+                sensor.desc.toLowerCase().includes(term)
+            );
+            renderCards(filtered);
+        });
+
+        // Modal Logic
+        function openModal(sensor) {
+            document.getElementById('modalTitle').textContent = sensor.name;
+            document.getElementById('modalDesc').textContent = sensor.desc;
+            document.getElementById('modalProject').textContent = sensor.project;
+            
+            // Set Images
+            document.getElementById('modalImage').src = sensor.imageUrl;
+            
+            // Generate Dynamic Pinout Diagram
+            const pinoutContainer = document.getElementById('modalPinout');
+            
+            // Extract sensor pins (left side of the '→' arrow in the data)
+            const sensorPins = sensor.arduino.map(connection => {
+                return connection.split('→')[0].trim();
+            });
+
+            let pinsHTML = '';
+            sensorPins.forEach(pinName => {
+                pinsHTML += `
+                    <div class="flex flex-col items-center group">
+                        <div class="w-3 sm:w-4 h-8 sm:h-10 bg-gradient-to-b from-yellow-300 to-yellow-600 rounded-sm shadow-[0_2px_4px_rgba(0,0,0,0.5)] mb-2 border border-yellow-700"></div>
+                        <span class="text-[10px] sm:text-xs font-mono font-bold text-slate-200 bg-slate-900 px-1.5 py-0.5 rounded shadow-sm border border-slate-700 text-center max-w-[60px] break-words">${pinName}</span>
+                    </div>
+                `;
+            });
+
+            // Build the virtual PCB board
+            pinoutContainer.innerHTML = `
+                <div class="w-full max-w-md bg-slate-800 rounded-xl p-4 sm:p-6 border-b-4 border-slate-900 shadow-inner flex flex-col items-center justify-center relative overflow-hidden">
+                    <!-- Decorative circuit traces pattern -->
+                    <div class="absolute inset-0 opacity-10" style="background-image: radial-gradient(#fff 1px, transparent 1px); background-size: 12px 12px;"></div>
+                    
+                    <div class="relative z-10 flex flex-col items-center w-full">
+                        <div class="flex flex-wrap justify-center gap-3 sm:gap-6 w-full">
+                            ${pinsHTML}
+                        </div>
+                        <div class="mt-6 px-4 py-1 bg-slate-900/60 rounded text-emerald-400 text-xs font-bold uppercase tracking-widest border border-slate-700/50 shadow-inner">
+                            ${sensor.name.substring(0, 15)}${sensor.name.length > 15 ? '...' : ''} Board
+                        </div>
+                    </div>
+                </div>
+            `;
+
+            // Icon
+            document.getElementById('modalIcon').innerHTML = `<i class="fas ${sensor.icon}"></i>`;
+            
+            // Generate and Set Code snippet
+            document.getElementById('modalCode').textContent = getSensorCode(sensor.id);
+            
+            // Wiring formatting
+            const ardList = document.getElementById('modalArduino');
+            ardList.innerHTML = sensor.arduino.map(pin => `<li><i class="fas fa-plug text-blue-300 mr-2"></i>${pin}</li>`).join('');
+            
+            const espList = document.getElementById('modalESP');
+            espList.innerHTML = sensor.esp32.map(pin => `<li><i class="fas fa-plug text-purple-300 mr-2"></i>${pin}</li>`).join('');
+
+            modal.classList.remove('hidden');
+            document.body.style.overflow = 'hidden'; // Prevent background scrolling
+        }
+
+        function closeModal() {
+            modal.classList.add('hidden');
+            document.body.style.overflow = 'auto'; // Restore scrolling
+        }
+
+        closeBtns.forEach(btn => btn.addEventListener('click', closeModal));
+
+        // Close on Escape key
+        document.addEventListener('keydown', (e) => {
+            if (e.key === 'Escape' && !modal.classList.contains('hidden')) {
+                closeModal();
+            }
+        });
+
+        // Initial Render
+        renderCards(sensorData);
+    </script>
+</body>
+</html>
